@@ -1,0 +1,42 @@
+version: "2"
+services:
+
+  # helper
+  helper:
+    build: helper/.
+
+  # http2 test services
+  s1:
+    volumes:
+      - "${PWD}/content/1:/data"
+    image: surma/simplehttp2server
+    command: "[-config firebase.json]"
+    expose:
+      - "5000"
+    # ports:
+    #   - "5000:5000"
+  s2:
+    volumes:
+      - "${PWD}/content/2:/data"
+    extends:
+        service: s1
+  s3:
+    volumes:
+      - "${PWD}/content/3:/data"
+    extends:
+        service: s1
+  s4:
+    volumes:
+      - "${PWD}/content/4:/data"
+    extends:
+        service: s1
+
+  #envoy
+  envoy:
+    image: lyft/envoy
+    entrypoint: "envoy --config-path /etc/envoy/config/config.json --log-level info --concurrency 32"
+    volumes:
+       - "${PWD}/envoy_config:/etc/envoy"
+    ports: 
+      - "443:443"
+      - "8001:8001"

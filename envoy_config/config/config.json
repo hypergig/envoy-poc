@@ -1,0 +1,82 @@
+{
+  "listeners": [
+    {
+      "address": "tcp://0.0.0.0:443",
+      "filters": [
+        {
+          "type": "read",
+          "name": "http_connection_manager",
+          "config": {
+            "access_log": [
+              {
+                "path": "/dev/stdout"
+              }
+            ],
+            "codec_type": "http2",
+            "stat_prefix": "ingress_http",
+            "route_config": {
+              "virtual_hosts": [
+                {
+                  "name": "backend",
+                  "domains": [
+                    "*"
+                  ],
+                  "routes": [
+                    {
+                      "prefix": "/",
+                      "cluster": "service"
+                    }
+                  ]
+                }
+              ]
+            },
+            "filters": [
+              {
+                "type": "decoder",
+                "name": "router",
+                "config": {}
+              }
+            ]
+          }
+        }
+      ],
+      "ssl_context": {
+        "cert_chain_file": "/etc/envoy/certs/cert.pem",
+        "private_key_file": "/etc/envoy/certs/key.pem",
+        "alpn_protocols": "h2"
+      }
+    }
+  ],
+  "admin": {
+    "access_log_path": "/dev/null",
+    "address": "tcp://0.0.0.0:8001"
+  },
+  "cluster_manager": {
+    "clusters": [
+      {
+        "name": "service",
+        "connect_timeout_ms": 250,
+        "type": "strict_dns",
+        "lb_type": "least_request",
+        "features": "http2",
+        "ssl_context": {
+          "alpn_protocols": "h2"
+        },
+        "hosts": [
+          {
+            "url": "tcp://s1:5000"
+          },
+          {
+            "url": "tcp://s2:5000"
+          },
+          {
+            "url": "tcp://s3:5000"
+          },
+          {
+            "url": "tcp://s4:5000"
+          }
+        ]
+      }
+    ]
+  }
+}
